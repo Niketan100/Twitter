@@ -121,8 +121,12 @@ export const likeUnlikePost = async (req, res) => {
                 to : post.user,
                 type : "like",
             })
-
-            await notification.save();
+            if(notification.from.toString()  === notification.to.toString()) {
+                
+            }else{
+                 await notification.save();
+            }
+           
             res.status(200).json(notification);
             console.log("Liked Post ");
         }
