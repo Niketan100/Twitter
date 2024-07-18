@@ -54,6 +54,9 @@ export const signup = async(req, res) => {
 export const login = async(req, res) =>{
     try {
         const {username, password} = req.body;
+
+        if(!username) return res.status(404).json({ error:"USername Can't be empty" }); 
+        if(!password) return res.status(404).json({ error:"Password Can't be empty" });
         const user = await User.findOne({ username});
         const isPasswordCorrect = await bcrypt.compare(password, user?.password|| "")
         
@@ -85,7 +88,7 @@ export const login = async(req, res) =>{
 
 export const logout = async(req,res) =>{
     try {
-        res.cookie("jwt", {maxAge: 0});
+        res.cookie("jwt","", {maxAge: 0});
         res.status(200).json({"message": "Logout successfully"})     
     } catch (error) {
         res.status(404).json({ error: error.message });
