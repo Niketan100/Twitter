@@ -3,24 +3,58 @@ import { BiRepost } from "react-icons/bi";
 import { FaRegHeart } from "react-icons/fa";
 import { FaRegBookmark } from "react-icons/fa6";
 import { FaTrash } from "react-icons/fa";
+import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import LoadingSpinner from "./LoadingSpinner.jsx"
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {toast} from "react-hot-toast"
 
 export default function Post({ post }){
-	const [comment, setComment] = useState("");
-	const postOwner = post.user;
-	const isLiked = false;
+	const queryClient = useQueryClient();
+	const isCommenting = false;
 
-	const isMyPost = true;
+	const {data:authUser} = useQuery({queryKey : ["authUser"]});
+
+	const {mutate :deletePost , isPending } = useMutation({
+		mutationFn: async () =>{
+			try {
+				const res = await fetch(`api/posts/${post._id}`,{
+					method : "delete",
+				})
+				const data = await res.json();
+				
+				if(!res.ok) throw new Error("Couldn't delete post")
+					return data;
+			} catch (error) {
+				console.error(error);
+			}
+		},
+		onSuccess: () =>{
+			toast.success("Post deleted successfully");
+			queryClient.invalidateQueries({queryKey: ["posts"]})
+		}
+	});
+
+	const [text, setText] = useState("");
+	const postOwner = post.user;
+	const isLiked = authUser;
+	
+
+
+	const isMyPost = authUser._id === post.user._id;
 
 	const formattedDate = "1h";
 
-	const isCommenting = false;
+	
 
-	const handleDeletePost = () => {};
+	const handleDeletePost = () => {
+		deletePost();
+	};
 
 	const handlePostComment = (e) => {
 		e.preventDefault();
+		
 	};
 
 	const handleLikePost = () => {};
@@ -46,6 +80,9 @@ export default function Post({ post }){
 						{isMyPost && (
 							<span className='flex justify-end flex-1'>
 								<FaTrash className='cursor-pointer hover:text-red-500' onClick={handleDeletePost} />
+								{isPending && (
+									<LoadingSpinner/>
+								)}
 							</span>
 						)}
 					</div>
@@ -108,8 +145,8 @@ export default function Post({ post }){
 										<textarea
 											className='textarea w-full p-1 rounded text-md resize-none border focus:outline-none  border-gray-800'
 											placeholder='Add a comment...'
-											value={comment}
-											onChange={(e) => setComment(e.target.value)}
+											value={text}
+											onChange={(e) => setText(e.target.value)}
 										/>
 										<button className='btn btn-primary rounded-full btn-sm text-white px-4'>
 											{isCommenting ? (

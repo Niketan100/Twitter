@@ -29,7 +29,7 @@ app.use(cors({
 
 const port = 3000;
 
-app.use(express.json());
+app.use(express.json({limit : "10mb"}));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 

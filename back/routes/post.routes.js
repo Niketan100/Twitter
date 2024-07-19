@@ -11,7 +11,7 @@ router.get('/all', protectRoute, getAllPosts);
 router.post('/create', protectRoute, createPost);
 router.post('/like/:id', protectRoute, likeUnlikePost);
 router.post('/comment/:id',protectRoute,commentonPost);
-router.delete('/delete/:id', protectRoute , deletePost);
+router.delete('/:id', protectRoute , deletePost);
 
 
 

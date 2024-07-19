@@ -18,20 +18,19 @@ const Posts = ({ feedType }) => {
     const POST_ENDPOINT = getPostEndPoint();
 
     const { data: posts, isLoading , refetch} = useQuery({
-        queryKey: ["posts", feedType],
+        queryKey: ["posts"],
         queryFn: async () => {
             try {
                 const res = await fetch(POST_ENDPOINT);
                 if (!res.ok) throw new Error("Something went wrong");
-
                 const data = await res.json();
-                console.log("Fetched data:", data); // Log the fetched data
                 return data;
             } catch (error) {
-                console.error(error);
+                console.error(error.message);
                 throw new Error("Something went wrong in Post endpoint");
             }
         },
+    
     });
 
 	useEffect(() => {
@@ -49,13 +48,13 @@ const Posts = ({ feedType }) => {
         );
     }
 
-    if (!isLoading && (!posts.posts || !Array.isArray(posts.posts))) {
+    if (!isLoading && (!posts || !Array.isArray(posts))) {
         return <p className='text-center my-4'>No posts in this tab. Switch 👻</p>;
     }
 
     return (
         <div>
-            {posts.posts.map((post) => (
+            {posts.map((post) => (
                 <Post key={post._id} post={post} />
             ))}
         </div>

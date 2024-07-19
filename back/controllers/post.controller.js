@@ -6,13 +6,13 @@ import {v2 as cloudinary} from "cloudinary"
 export const createPost = async (req, res) =>{
     try {
         const {text} = req.body;
-        const{img} = req.body;
+        let{img} = req.body;
         const userId = req.user._id.toString();
 
         const user = await User.findById(userId);
 
         if(!user) return res.status(404).json({message:"User not found"});
-        if(!text && !img) return res.status(404).json({message : "Blank can't be uploaded"});
+        if(!text) return res.status(404).json({message : "Blank can't be uploaded"});
 
         if(img){
             const uploadResponse = await cloudinary.uploader.upload(img);
@@ -27,6 +27,7 @@ export const createPost = async (req, res) =>{
         })
 
         await newPost.save();
+        console.log("New Post Uploaded Success")
         res.status(201).json({newPost});
 
 
@@ -143,13 +144,16 @@ export const getAllPosts = async (req, res) => {
             path : 'user',
             select : "-password"
             
+        }).populate({
+            path: 'comments.user',
+            select: '-password'
         });
         if(posts.length === 0) {
             return res.status(404).json({error : "No posts found"});
         }
 
-        res.status(200).json({posts});
-        console.log(posts);
+        res.status(200).json(posts);
+       
         
     } catch (error) {
         console.log(error);
