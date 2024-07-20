@@ -83,8 +83,9 @@ export const commentonPost = async (req, res) => {
         post.comments.push(comment);
 
         await post.save();
+        const upDatedComments = post.comments;
 
-        res.status(200).json({Message: "Comment Added !!"});
+        res.status(200).json({upDatedComments});
         console.log("Comemnt Added !!");
 
     } catch (error) {

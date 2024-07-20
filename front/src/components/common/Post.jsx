@@ -6,18 +6,17 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import LoadingSpinner from "./LoadingSpinner.jsx";
 import { toast } from "react-hot-toast";
+import { formatPostDate } from "../../utils/date/index.js";
 
 export default function Post({ post }) {
   const queryClient = useQueryClient();
   const [text, setText] = useState("");
   const { data: authUser } = useQuery({ queryKey: ["authUser"] });
 
-  const isCommenting = false; // Assuming commenting state for the button spinner
   const isMyPost = authUser && authUser._id === post.user._id;
-  const formattedDate = "1h"; // Example static formatted date
+  const formattedDate = formatPostDate(post.createdAt); 
 
-  // Log post.likes to see its structure
-
+  
   const isLiked = Array.isArray(post.likes) && post.likes.includes(authUser._id);
 
   const deletePostMutation = useMutation({
@@ -57,6 +56,31 @@ export default function Post({ post }) {
     },
   });
 
+  const { mutate: commentPost, isPending: isCommenting } = useMutation({
+    mutationFn: async (text) => {
+      try {
+        const res = await fetch(`api/posts/comment/${post._id}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ text }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Error posting comment");
+        return data;
+      } catch (error) {
+        console.error(error.message);
+      }
+    },
+    onSuccess: (updatedComments) => {
+      toast.success("Comment Added");
+      setText("");
+      queryClient.invalidateQueries({queryKey : ["posts"]})
+    },
+  });
+
   const handleDeletePost = () => {
     deletePostMutation.mutate();
   };
@@ -68,9 +92,15 @@ export default function Post({ post }) {
 
   const handlePostComment = (e) => {
     e.preventDefault();
-    // Implement comment posting logic here
+    commentPost(text);
   };
 
+  // Log post.comments to understand its structure
+  console.log("post.comments:", post.comments);
+
+  // Ensure post.comments is an array
+  const comments = post.comments;
+  console.log(comments)
   return (
     <div className="flex gap-2 items-start p-4 border-b border-gray-700">
       <div className="avatar">
@@ -113,17 +143,17 @@ export default function Post({ post }) {
             >
               <FaRegComment className="w-4 h-4 text-slate-500 group-hover:text-sky-400" />
               <span className="text-sm text-slate-500 group-hover:text-sky-400">
-                {post.comments.length}
+                {comments.length}
               </span>
             </div>
             <dialog id={`comments_modal${post._id}`} className="modal border-none outline-none">
               <div className="modal-box rounded border border-gray-600">
                 <h3 className="font-bold text-lg mb-4">COMMENTS</h3>
                 <div className="flex flex-col gap-3 max-h-60 overflow-auto">
-                  {post.comments.length === 0 && (
+                  {comments.length === 0 && (
                     <p className="text-sm text-slate-500">No comments yet 🤔 Be the first one 😉</p>
                   )}
-                  {post.comments.map((comment) => (
+                  {comments.map((comment) => (
                     <div key={comment._id} className="flex gap-2 items-start">
                       <div className="avatar">
                         <div className="w-8 rounded-full">
