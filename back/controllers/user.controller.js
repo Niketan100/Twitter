@@ -20,8 +20,6 @@ export const getUserProfile = async (req,res) =>{
     }
 }
 
-
-
 export const followUnfolloweUser = async (req,res) =>{
 
     try {
@@ -65,8 +63,6 @@ export const followUnfolloweUser = async (req,res) =>{
     }
 }  
 
-
-
 export const getsuggestedUsers = async (req, res) => {
     try {
         
@@ -94,8 +90,6 @@ export const getsuggestedUsers = async (req, res) => {
         
     }
 }
-
-
 
 export const updateUserProfile = async (req, res) =>{
     const{fullName , email , username , currentPassword , newPassword , bio, link} = req.body;
