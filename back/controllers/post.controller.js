@@ -85,7 +85,7 @@ export const commentonPost = async (req, res) => {
         await post.save();
         const upDatedComments = post.comments;
 
-        res.status(200).json({upDatedComments});
+        res.status(200).json(upDatedComments);
         console.log("Comemnt Added !!");
 
     } catch (error) {
@@ -105,15 +105,16 @@ export const likeUnlikePost = async (req, res) => {
             return res.status(404).json({error:"Post not found"});
         }
         const userLikedPost = post.likes.includes(userId);
-
+        console.log(userLikedPost)
         if(userLikedPost){
             // unline the post 
             await Post.updateOne({_id: postId}, {$pull: {likes: userId}});
             await User.updateOne({_id: userId}, {$pull: { likedPost: postId}});
-            const updatedLikes = post.likes.filter((id) => id.toString() !== userId);
-
-            res.status(200).json({updatedLikes});
-            console.log("Unliked post");
+            const updatedPost = await Post.findById(postId);  // Re-fetch the post to get updated likes
+            const UpdatedLikes = updatedPost.likes;
+            res.status(200).json(UpdatedLikes)
+            
+            
         }else{
             // Like post and send notification
             post.likes.push(userId);

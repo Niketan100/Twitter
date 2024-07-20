@@ -42,9 +42,11 @@ export default function Post({ post }) {
         method: "POST",
       });
       if (!res.ok) throw new Error("Error liking/unliking post");
-      return res.json();
+      const data = await res.json();
+      return data
     },
     onSuccess: (updatedLikes) => {
+      console.log(updatedLikes);
       queryClient.setQueryData(["posts"], (oldData) =>
         oldData.map((p) =>
           p._id === post._id ? { ...p, likes: updatedLikes } : p
@@ -96,11 +98,11 @@ export default function Post({ post }) {
   };
 
   // Log post.comments to understand its structure
-  console.log("post.comments:", post.comments);
+  
 
   // Ensure post.comments is an array
   const comments = post.comments;
-  console.log(comments)
+  
   return (
     <div className="flex gap-2 items-start p-4 border-b border-gray-700">
       <div className="avatar">
