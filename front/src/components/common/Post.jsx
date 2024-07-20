@@ -61,7 +61,7 @@ export default function Post({ post }) {
   const { mutate: commentPost, isPending: isCommenting } = useMutation({
     mutationFn: async (text) => {
       try {
-        const res = await fetch(`api/posts/comment/${post._id}`, {
+        const res = await fetch(`/api/posts/comment/${post._id}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -70,10 +70,11 @@ export default function Post({ post }) {
         });
 
         const data = await res.json();
+        console.log(data);
         if (!res.ok) throw new Error(data.message || "Error posting comment");
         return data;
       } catch (error) {
-        console.error(error.message);
+        console.error(error);
       }
     },
     onSuccess: (updatedComments) => {
@@ -94,6 +95,7 @@ export default function Post({ post }) {
 
   const handlePostComment = (e) => {
     e.preventDefault();
+    
     commentPost(text);
   };
 
@@ -106,7 +108,7 @@ export default function Post({ post }) {
   return (
     <div className="flex gap-2 items-start p-4 border-b border-gray-700">
       <div className="avatar">
-        <Link to={`/profile/${post.user.username}`} className="w-8 rounded-full overflow-hidden">
+        <Link to={`profile/${post.user.username}`} className="w-8 rounded-full overflow-hidden">
           <img src={post.user.profileImg || "/avatar-placeholder.png"} alt="avatar" />
         </Link>
       </div>

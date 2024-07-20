@@ -6,19 +6,20 @@ import Notification from "../models/notification.js";
 
 
 
-export const getUserProfile = async (req,res) =>{
-    const {username} = req.params;
-
-    try {   
-        const user = await User.findOne({username: username }); 
-        if(!user) return res.status(404).json({message: "User not found" });
+export const getUserProfile = async (req, res) => {
+    const { username } = req.params;
+    try {
+        const user = await User.findOne({ username }).populate('followers').populate('following');
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
         res.status(200).json(user);
-        
     } catch (error) {
-        console.log("Error in getUserProfile", error);
-        res.status(500).json({error: error});
+        console.error(error);
+        res.status(500).json({ error: "Error while fetching user profile" });
     }
-}
+};
+
 
 export const followUnfolloweUser = async (req,res) =>{
 

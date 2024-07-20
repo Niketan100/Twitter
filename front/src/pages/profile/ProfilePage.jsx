@@ -1,17 +1,18 @@
-import { useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { useQueryClient , useQuery} from "@tanstack/react-query";
 
 import Posts from "../../components/common/Posts";
 import ProfileHeaderSkeleton from "../../components/skeletons/ProfileHeaderSkeleton";
 import EditProfileModal from "./EditProfileModal";
 
-import { POSTS } from "../../utils/db/dummy";
+
 
 import { FaArrowLeft } from "react-icons/fa6";
 import { IoCalendarOutline } from "react-icons/io5";
 import { FaLink } from "react-icons/fa";
 import { MdEdit } from "react-icons/md";
-import { useQuery } from "@tanstack/react-query";
+
 
 const ProfilePage = () => {
 	const [coverImg, setCoverImg] = useState(null);
@@ -21,10 +22,36 @@ const ProfilePage = () => {
 	const coverImgRef = useRef(null);
 	const profileImgRef = useRef(null);
 
-	const isLoading = false;
-	const isMyProfile = true;
 
-	const {data:user} = useQuery({queryKey : ["authUser"]})
+
+const {data:posts} = useQuery({queryKey : ["posts"]})
+
+	
+	const { username } = useParams();
+	
+	const {data: activeuser} = useQuery({queryKey : ["authUser"]})
+	console.log(activeuser)
+	const isMyProfile = activeuser.username === username;
+	
+	const { data: user, isLoading, refetch, isRefetching } = useQuery({
+		queryKey: ["userProfile"],
+		queryFn: async () => {
+			try {
+				const res = await fetch(`/api/users/profile/${username}`);
+				const data = await res.json()
+			
+				if (!res.ok) throw new Error("Something went wrong");
+	
+				
+				return data;
+			} catch (error) {
+				console.error(error.message);
+				throw new Error("Something went wrong in user profile endpoint");
+			}
+		}
+	});
+	
+	
 
 	const handleImgChange = (e, state) => {
 		const file = e.target.files[0];
@@ -37,6 +64,10 @@ const ProfilePage = () => {
 			reader.readAsDataURL(file);
 		}
 	};
+
+	useEffect(() => {
+		refetch();
+	},[username , refetch , feedType]);
 
 	return (
 		<>
@@ -53,7 +84,7 @@ const ProfilePage = () => {
 								</Link>
 								<div className='flex flex-col'>
 									<p className='font-bold text-lg'>{user?.fullName}</p>
-									<span className='text-sm text-slate-500'>{POSTS?.length} posts</span>
+									<span className='text-sm text-slate-500'>{posts?.length} posts</span>
 								</div>
 							</div>
 							{/* COVER IMG */}
@@ -181,7 +212,7 @@ const ProfilePage = () => {
 						</>
 					)}
 
-					<Posts feedType={feedType} user={user}/>
+					<Posts feedType={feedType} username={username} userId={activeuser?._id}/>
 				</div>
 			</div>
 		</>

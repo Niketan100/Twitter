@@ -155,9 +155,9 @@ export const getAllPosts = async (req, res) => {
         if(posts.length === 0) {
             return res.status(404).json({error : "No posts found"});
         }
-
+        console.log(posts)
         res.status(200).json(posts);
-       
+        
         
     } catch (error) {
         console.log(error);
@@ -181,7 +181,7 @@ export const getLikedPosts =async (req, res) => {
             select: "-password"
         });
 
-        res.status(200).json({LikedPosts})
+        res.status(200).json(LikedPosts)
         console.log(LikedPosts);
         
     } catch (error) {
@@ -211,14 +211,14 @@ export const getfollowingPosts =async (req, res) =>{
 
     } catch (error) {
         console.error(error);
-        res.status(404).json({message:"Something went wrong"});
+        res.status(500).json({message:"Something went wrong"});
     }
 }
 
 export const getUserposts = async (req, res) => {
 try {
     const {username} = req.params;
-    const user = await User.findOne({username: username});
+    const user = await User.findOne({username});
 
     if(!user) return res.status(404).json({message: 'User not found'});
 
@@ -233,10 +233,7 @@ try {
         select: '-password'
     })
 
-    res.status(200).json({posts})
-
-
-
+    res.status(201).json(posts);
 } catch (error) {
     console.log(error);
     res.status(404).json({message:"Something went wrong"});
