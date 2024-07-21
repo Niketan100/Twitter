@@ -1,38 +1,39 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useQueryClient , useQuery} from "@tanstack/react-query";
+import { useQueryClient , useQuery, useMutation} from "@tanstack/react-query";
 
 import Posts from "../../components/common/Posts";
 import ProfileHeaderSkeleton from "../../components/skeletons/ProfileHeaderSkeleton";
 import EditProfileModal from "./EditProfileModal";
-
-
+import userfollow from "../../hooks/useFollow.jsx";
 
 import { FaArrowLeft } from "react-icons/fa6";
 import { IoCalendarOutline } from "react-icons/io5";
 import { FaLink } from "react-icons/fa";
+
 import { MdEdit } from "react-icons/md";
 
 
 const ProfilePage = () => {
-	const [coverImg, setCoverImg] = useState(null);
-	const [profileImg, setProfileImg] = useState(null);
+	const {follow , isPending} = userfollow();
+	const queryClient = useQueryClient();
+
+	const [coverPic, setcoverPic] = useState(null);
+	const [profilePic, setprofilePic] = useState(null);
 	const [feedType, setFeedType] = useState("posts");
 
 	const coverImgRef = useRef(null);
 	const profileImgRef = useRef(null);
 
+	const {data:posts} = useQuery({queryKey : ["posts"]})
 
-
-const {data:posts} = useQuery({queryKey : ["posts"]})
-
-	
 	const { username } = useParams();
 	
 	const {data: activeuser} = useQuery({queryKey : ["authUser"]})
 	console.log(activeuser)
 	const isMyProfile = activeuser.username === username;
 	
+	// fetching User profile
 	const { data: user, isLoading, refetch, isRefetching } = useQuery({
 		queryKey: ["userProfile"],
 		queryFn: async () => {
@@ -51,23 +52,55 @@ const {data:posts} = useQuery({queryKey : ["posts"]})
 		}
 	});
 	
-	
+	const {mutate:updateProfile, isPending:updatingProfile} = useMutation({
+		mutationFn: async () =>{
+			try {
+				const res = await fetch("/api/users/update",{
+					method: 'POST',
+					headers:{
+						"Content-Type": "application/json",
 
+					},
+					body: JSON.stringify({
+						coverPic,
+						profilePic
+					})
+				});
+				const data = await res.json();
+				if(!res.ok) throw new Error("Something went wrong");
+				console.log(data, "the data");
+				return data;
+
+			} catch (error) {
+				console.log(error.message);
+			}
+		},
+		onSuccess: () => {
+			toast.success("Updated profile");
+			setprofilePic();
+			setcoverPic()
+			queryClient.invalidateQueries({queryKey : ["userProfile"]});
+		}
+	})
+
+	
 	const handleImgChange = (e, state) => {
 		const file = e.target.files[0];
 		if (file) {
 			const reader = new FileReader();
 			reader.onload = () => {
-				state === "coverImg" && setCoverImg(reader.result);
-				state === "profileImg" && setProfileImg(reader.result);
+				state === "coverPic" && setcoverPic(reader.result);
+				state === "profilePic" && setprofilePic(reader.result);
 			};
-			reader.readAsDataURL(file);
+			reader.readAsDataURL(file); 
 		}
 	};
+	// follow vairable
+	const isFollowing = activeuser.following.includes(user?._id);
 
 	useEffect(() => {
 		refetch();
-	},[username , refetch , feedType]);
+	},[refetch,username,feedType, updateProfile]);
 
 	return (
 		<>
@@ -90,7 +123,7 @@ const {data:posts} = useQuery({queryKey : ["posts"]})
 							{/* COVER IMG */}
 							<div className='relative group/cover'>
 								<img
-									src={coverImg || user?.coverImg || "/cover.png"}
+									src={coverPic || user?.coverPic || "/cover.png"}
 									className='h-52 w-full object-cover'
 									alt='cover image'
 								/>
@@ -107,18 +140,18 @@ const {data:posts} = useQuery({queryKey : ["posts"]})
 									type='file'
 									hidden
 									ref={coverImgRef}
-									onChange={(e) => handleImgChange(e, "coverImg")}
+									onChange={(e) => handleImgChange(e, "coverPic")}
 								/>
 								<input
 									type='file'
 									hidden
 									ref={profileImgRef}
-									onChange={(e) => handleImgChange(e, "profileImg")}
+									onChange={(e) => handleImgChange(e, "profilePic")}
 								/>
 								{/* USER AVATAR */}
 								<div className='avatar absolute -bottom-16 left-4'>
 									<div className='w-32 rounded-full relative group/avatar'>
-										<img src={profileImg || user?.profileImg || "/avatar-placeholder.png"} />
+										<img src={profilePic || user?.profilePic || "/avatar-placeholder.png"} />
 										<div className='absolute top-5 right-3 p-1 bg-primary rounded-full group-hover/avatar:opacity-100 opacity-0 cursor-pointer'>
 											{isMyProfile && (
 												<MdEdit
@@ -135,17 +168,22 @@ const {data:posts} = useQuery({queryKey : ["posts"]})
 								{!isMyProfile && (
 									<button
 										className='btn btn-outline rounded-full btn-sm'
-										onClick={() => alert("Followed successfully")}
+										onClick={() => follow(user?._id)}
 									>
-										Follow
+										{isLoading && 'Loading...'}
+										{!isLoading && isFollowing && 'Following'}
+										{!isLoading && !isFollowing && 'Follow'}
 									</button>
 								)}
-								{(coverImg || profileImg) && (
+								{(coverPic || profilePic) && (
 									<button
 										className='btn btn-primary rounded-full btn-sm text-white px-4 ml-2'
-										onClick={() => alert("Profile updated successfully")}
+										onClick={() =>{
+											updateProfile()
+										}}
 									>
-										Update
+										{updatingProfile && 'Updating...'}
+										{!updatingProfile && 'update'}
 									</button>
 								)}
 							</div>
@@ -154,7 +192,7 @@ const {data:posts} = useQuery({queryKey : ["posts"]})
 								<div className='flex flex-col'>
 									<span className='font-bold text-lg'>{user?.fullName}</span>
 									<span className='text-sm text-slate-500'>@{user?.username}</span>
-									<span className='text-sm my-1'>{user?.bio}</span>
+									<span className='text-sm my-1'>{user?.Bio}</span>
 								</div>
 
 								<div className='flex gap-2 flex-wrap'>
@@ -212,7 +250,7 @@ const {data:posts} = useQuery({queryKey : ["posts"]})
 						</>
 					)}
 
-					<Posts feedType={feedType} username={username} userId={activeuser?._id}/>
+					<Posts feedType={feedType} username={username} userId={user?._id}/>
 				</div>
 			</div>
 		</>

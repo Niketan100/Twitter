@@ -93,7 +93,7 @@ export const getsuggestedUsers = async (req, res) => {
 }
 
 export const updateUserProfile = async (req, res) =>{
-    const{fullName , email , username , currentPassword , newPassword , bio, link} = req.body;
+    const{fullName ,email ,username , currentPassword , newPassword , bio, link} = req.body;
     let {profilePic , coverPic} = req.body;
     const userId = req.user._id;
 
@@ -116,6 +116,7 @@ export const updateUserProfile = async (req, res) =>{
 
             const uploadResponse = await cloudinary.uploader.upload(profilePic);
             profilePic = uploadResponse.secure_url;
+            console.log(profilePic);
         }
         // changing cover pic if it's being provided
 
@@ -126,7 +127,9 @@ export const updateUserProfile = async (req, res) =>{
             const uploadResponse = await cloudinary.uploader.upload(coverPic);
             coverPic = uploadResponse.secure_url;
         }
-
+        console.log(fullName);
+        console.log(username);
+        console.log(bio);
         user.fullName = fullName || user.fullName;
         user.email = email || user.email;
         user.username = username || user.username;

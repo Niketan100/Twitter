@@ -14,17 +14,20 @@ const userfollow = () =>{
 
                 const data = await res.json();
                 if(!res.ok) throw new Error(error.message || "Something wrong");
-
+                console.log(data, "from Follow Hook");
                 return data;
             } catch (error) {
                 console.log(error)
             }
         },
         onSuccess: () =>{
-            toast.success("Followed user");
+            toast.success("Done")
             Promise.all([
-            queryClient.invalidateQueries({queryKey: ["suggestedUsers"]}),  
-            queryClient.invalidateQueries({queryKey: ["authUser"]})
+            queryClient.invalidateQueries({queryKey: ["suggestedUsers"]}),
+            queryClient.invalidateQueries({queryKey: ["userProfile"]}),
+            queryClient.invalidateQueries({queryKey: ["authUser"]})  
+
+        
         ]);
         }
     });

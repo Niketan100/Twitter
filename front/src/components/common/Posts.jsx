@@ -39,12 +39,12 @@ const Posts = ({ feedType , username , userId}) => {
         },
     
     });
-
+    console.log(posts);
 
 
 	useEffect(() => {
 		refetch();
-	}, [feedType, refetch]);
+	}, [username, feedType, refetch]);
 
 
     if (isLoading && refetch) {
@@ -57,8 +57,8 @@ const Posts = ({ feedType , username , userId}) => {
         );
     }
 
-    if (!isLoading && (!posts || !Array.isArray(posts))) {
-        return <p className='text-center my-4'>No posts in this tab. Switch 👻</p>;
+    if (!isLoading && posts?.length===0) {
+        return <p className='text-center my-4'>💔 No posts </p>;
     }
 
     return (
